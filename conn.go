@@ -12,5 +12,5 @@ type Conn struct {
   sessions map[string]interface{}
   id string
 
-  h *hub
+  hub *Hub
 }
