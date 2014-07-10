@@ -37,8 +37,9 @@ func (conn *Conn) readProcess() {
     if err != nil {
       break
     }
-    e := &event{name: m["name"], msg: m["msg"], conn: conn}
-    fn, ok := conn.hub.handlers[e.name]
+
+    e := &Event{Name: m["name"], Msg: m["msg"], Conn: conn}
+    fn, ok := conn.hub.handlers[e.Name]
     if ok {
       fn(e)
     }
@@ -78,7 +79,7 @@ func (conn *Conn) Send(e string, msg string) {
   conn.send <- data
 }
 
-func (conn *Conn) BroadCast(e string, msg string) {
+func (conn *Conn) Broadcast(e string, msg string) {
   for _, c := range conn.hub.conns {
     c.Send(e, msg)
   }
