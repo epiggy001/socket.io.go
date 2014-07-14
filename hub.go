@@ -37,6 +37,8 @@ type Hub struct {
   upgrader *websocket.Upgrader
 
   locker *sync.RWMutex
+
+  OnRelease func(conn *Conn)
 }
 
 func NewHub(upgrader *websocket.Upgrader) *Hub {
@@ -44,7 +46,8 @@ func NewHub(upgrader *websocket.Upgrader) *Hub {
   ch := make(chan *Event)
   handlers := make(map[string]func(e *Event))
   locker := new(sync.RWMutex)
-  return &Hub{conns, ch, handlers, upgrader, locker}
+  return &Hub{conns: conns, ch: ch, handlers: handlers, upgrader: upgrader,
+    locker: locker}
 }
 
 func (hub *Hub) On(e string, f func(e *Event)) {
@@ -62,7 +65,7 @@ func (hub *Hub) Upgrade(w http.ResponseWriter, r *http.Request) (*Conn, error) {
 
   hub.locker.Lock()
   defer hub.locker.Unlock()
-  hub.conns[id] = &Conn{conn, sessions, id, hub, ch}
+  hub.conns[id] = &Conn{conn, sessions, id, hub, ch, new(sync.RWMutex)}
   return hub.conns[id], nil
 }
 
@@ -72,6 +75,9 @@ func (hub *Hub) Release(conn *Conn) {
   id := conn.ID()
   _, ok := hub.conns[id]
   if ok {
+    if (hub.OnRelease != nil) {
+      hub.OnRelease(conn)
+    }
     delete(hub.conns, id)
     close(conn.send)
   }

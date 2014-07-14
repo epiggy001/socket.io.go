@@ -18,6 +18,10 @@
     this._conn.onclose = fn;
   };
 
+  socket.prototype.onopen = function(fn) {
+    this._conn.onopen = fn;
+  };
+
   socket.prototype.on = function(evt, fn) {
     this._handlers[evt] = fn;
   };
